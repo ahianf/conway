@@ -1,37 +1,46 @@
+/* (C)2022 - Ahian Fernández Puelles*/
 package cl.ahian.conway;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import javax.swing.*;
 
 class AnimationFrame extends JPanel {
 
-    long animDuration = 3600000;
-    long currentTime = System.nanoTime() / 1000000;
-    long startTime = currentTime;
-    long elapsedTime = currentTime - startTime;
+    static final int FRAME_WIDTH = 1280;
+    static final int FRAME_HEIGHT = 720;
+
     int chrono = 1000 / refreshRate();
-    static BufferedImage canvas;
-    GameOfLife gol = new GameOfLife(1920, 1080);
+    int counter = 0;
 
+    static BufferedImage canvas =
+            new BufferedImage(FRAME_WIDTH, FRAME_HEIGHT, BufferedImage.TYPE_INT_ARGB);
 
+    Conway conway = new Conway(FRAME_WIDTH, FRAME_HEIGHT);
+    static JFrame frame = new JFrame("JConway");
+
+    public static void main(String[] args) {
+        createAndShowGUI();
+    }
 
     public AnimationFrame() {
         setPreferredSize(new Dimension(canvas.getWidth(), canvas.getHeight()));
     }
 
-    public void runAnimation() {
-        while (elapsedTime < animDuration) {
-            currentTime = System.nanoTime() / 1000000;
-            elapsedTime = currentTime - startTime;
-            System.out.println(elapsedTime);
-            int[][] grid = gol.apply();
+    private void runAnimation() {
+        while (true) {
+            long startTime = System.nanoTime();
+            boolean[][] grid = conway.apply();
             drawArray(grid);
+            long duration = (System.nanoTime() - startTime);
+            counter++;
             try {
                 Thread.sleep(chrono);
-            } catch (Exception e) {
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
             repaint();
+            frame.setTitle("JConway | FPS: " + 1000000000 / duration + " Generation: " + counter);
         }
     }
 
@@ -42,56 +51,37 @@ class AnimationFrame extends JPanel {
         g2.drawImage(canvas, null, null);
     }
 
-    public static void main(String[] args) {
-        createAndShowGUI();
-    }
-
-    public static void createAndShowGUI() {
-        int width = 1920;
-        int height = 1080;
-        JFrame frame = new JFrame("Direct draw demo");
-        canvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        fillCanvas(Color.WHITE);
+    private static void createAndShowGUI() {
         AnimationFrame animationPanel = new AnimationFrame();
 
         frame.add(animationPanel);
         frame.pack();
         frame.setVisible(true);
-        frame.setResizable(false);
-
+        frame.setResizable(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        //I made the call to runAnimation here now
-        //after the containing frame i visible.
         animationPanel.runAnimation();
     }
 
-    public static void fillCanvas(Color c) {
-        int color = c.getRGB();
-        for (int x = 0; x < canvas.getWidth(); x++) {
-            for (int y = 0; y < canvas.getHeight(); y++) {
-                canvas.setRGB(x, y, color);
-            }
-        }
-    }
-
     private static int refreshRate() {
-        return GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0].getDisplayMode().getRefreshRate();
-
+        return GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getScreenDevices()[0]
+                .getDisplayMode()
+                .getRefreshRate();
     }
 
-    public void drawArray(int[][] grid) {
-        int redRGB = Color.RED.getRGB();
-        int whiteRGB = Color.WHITE.getRGB();
-        for (int i = 0; i < canvas.getWidth(); i++) {
-            for (int j = 0; j < canvas.getHeight(); j++) {
-                if (grid[i][j] == 1) {
-                    canvas.setRGB(i, j, redRGB);
+    public static void drawArray(boolean[][] grid) {
+        final int whiteRGB = Color.WHITE.getRGB();
+        final int redRGB = Color.RED.getRGB();
+
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid[row].length; col++) {
+                if (grid[row][col]) {
+                    canvas.setRGB(row, col, redRGB);
                 } else {
-                    canvas.setRGB(i, j, whiteRGB);
+                    canvas.setRGB(row, col, whiteRGB);
                 }
             }
         }
     }
-
 }
