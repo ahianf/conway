@@ -1,6 +1,7 @@
 /* (C)2022 - Ahian Fernández Puelles*/
 package cl.ahian.conway;
 
+import java.io.IOException;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,17 +49,13 @@ public class Conway {
     }
 
     private static boolean[][] generarMatriz(int x, int y) {
-        boolean[][] grid = new boolean[x][y];
+        Biblioteca biblioteca = new Biblioteca();
 
-        // Llenar el array con un valores aleatorios.
-        //        for (boolean[] row : grid) {
-        //            Arrays.fill(row, random.nextBoolean());
-        //        }
-
-        for (int i = 100; i < grid.length; i++) {
-            for (int j = 100; j < 150; j++) {
-                grid[i][j] = random.nextBoolean();
-            }
+        boolean[][] grid;
+        try {
+            grid = biblioteca.getTest();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         logger.log(Level.INFO, "Grid llenado con datos aleatorios");
         return grid;
