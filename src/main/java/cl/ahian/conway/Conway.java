@@ -9,14 +9,12 @@ import java.util.logging.Logger;
 public class Conway {
     static Logger logger = Logger.getLogger(Conway.class.getName());
     private static final Random random = new Random();
-    private final int x;
-    private final int y;
+    private static int x;
+    private static int y;
     boolean[][] grid;
 
-    public Conway(int x, int y) {
-        this.x = x;
-        this.y = y;
-        grid = generarMatriz(x, y);
+    public Conway() {
+        grid = generarMatriz();
     }
 
     public boolean[][] apply() {
@@ -48,16 +46,24 @@ public class Conway {
         return newGrid;
     }
 
-    private static boolean[][] generarMatriz(int x, int y) {
+    private boolean[][] generarMatriz() {
         Biblioteca biblioteca = new Biblioteca();
-
         boolean[][] grid;
         try {
             grid = biblioteca.getTest();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        logger.log(Level.INFO, "Grid llenado con datos aleatorios");
+        x = grid.length;
+        y = grid[0].length;
         return grid;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 }

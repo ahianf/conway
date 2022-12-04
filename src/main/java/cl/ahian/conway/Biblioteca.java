@@ -2,38 +2,84 @@
 package cl.ahian.conway;
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Biblioteca {
+    static Logger logger = Logger.getLogger(Biblioteca.class.getName());
 
     public boolean[][] getTest() throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader("./src/main/resources/file.txt"));
-        boolean[][] grid = parseLines(reader);
-        return grid;
+
+        //        BufferedReader reader = new BufferedReader(new FileReader("./src/main/resources/file.txt"));
+//        boolean[][] grid = parseLines(reader);
+        return read(new File("./src/main/resources/pattern.rle"));
     }
 
-    private static boolean[][] parseLines(BufferedReader reader) throws IOException {
-        boolean[][] grid = new boolean[187][187];
-        String line = reader.readLine();
-        int counter = 0;
-        while (line != null) {
-            String[] stringArray = line.split("[,]");
-            int arrayLength = stringArray.length;
-            boolean[] booleanArray = new boolean[arrayLength];
+    public static boolean[][] read(File file) {
+        long startTime = System.nanoTime();
+        logger.log(Level.INFO, "Iniciando lectura de: '" + file.getAbsolutePath() + "'");
+        Scanner scanner;
+        try {
+            scanner = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
 
-            for (int i = 0; i < arrayLength; i++) {
-                if (stringArray[i].equals("0")) {
-                    booleanArray[i] = false;
-                } else if (stringArray[i].equals("1")) {
-                    booleanArray[i] = true;
+        String line = scanner.nextLine();
+        for (; line.charAt(0) == '#'; line = scanner.nextLine()) {
+            ; // Para saltar los comentarios
+        }
+
+        Pattern pattern = Pattern.compile("^x = ([0-9]+), y = ([0-9]+), rule = (.+)$");
+        Matcher matcher = pattern.matcher(line);
+
+        if (!matcher.matches()) {
+            return null;
+        }
+
+        int n = Integer.parseInt(matcher.group(1));
+        int m = Integer.parseInt(matcher.group(2));
+        logger.log(Level.INFO, "Tamaño grid RLE: " + "x: " + n + ", y: " + m);
+        @SuppressWarnings("unused") String rule = matcher.group(3);
+
+        boolean[][] array = new boolean[m][n];
+        int buffer = 0;
+        int x = 0, y = 0;
+
+        do {
+            line = scanner.nextLine();
+            for (int j = 0; j < line.length(); j++) {
+                char c = line.charAt(j);
+                if (Character.isDigit(c)) {
+                    buffer = (10 * buffer) + (c - '0');
+                } else if (c == 'o') {
+                    Arrays.fill(array[y], x, Math.min(n, x + Math.max(1, buffer)), true);
+                    x += Math.max(1, buffer);
+                    buffer = 0;
+                } else if (c == 'b') {
+                    x += Math.max(1, buffer);
+                    buffer = 0;
+                } else if (c == '$') {
+                    y += Math.max(1, buffer);
+                    x = 0;
+                    buffer = 0;
+                } else if (c == '!') {
+                    long endTime = System.nanoTime();
+                    long duration = (endTime - startTime);
+                    logger.info("RLE leído con éxito, conversión demoró " + duration / 1000000 + " ms");
+                    return array;
                 } else {
-                    throw new RuntimeException("Valor inválido");
+                    return null;
                 }
             }
-            grid[counter] = booleanArray;
-            line = reader.readLine();
-            counter++;
-        }
-        reader.close();
-        return grid;
+        } while (scanner.hasNext());
+
+        return null;
     }
+
 }
