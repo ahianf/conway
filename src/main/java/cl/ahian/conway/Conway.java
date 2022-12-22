@@ -1,9 +1,9 @@
 /* (C)2022 - Ahian Fernández Puelles*/
 package cl.ahian.conway;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Random;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Conway {
@@ -13,8 +13,11 @@ public class Conway {
     private static int y;
     boolean[][] grid;
 
-    public Conway() {
-        grid = generarMatriz();
+    public Conway(File path) {
+        if (path==null){
+            throw new RuntimeException("File not selected");
+        }
+        grid = generarMatriz(path);
     }
 
     public boolean[][] apply() {
@@ -46,11 +49,11 @@ public class Conway {
         return newGrid;
     }
 
-    private boolean[][] generarMatriz() {
+    private boolean[][] generarMatriz(File path) {
         Biblioteca biblioteca = new Biblioteca();
         boolean[][] grid;
         try {
-            grid = biblioteca.getTest();
+            grid = biblioteca.getTest(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

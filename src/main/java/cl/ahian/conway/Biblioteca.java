@@ -12,11 +12,12 @@ import java.util.regex.Pattern;
 public class Biblioteca {
     static Logger logger = Logger.getLogger(Biblioteca.class.getName());
 
-    public boolean[][] getTest() throws IOException {
+    public boolean[][] getTest(File path) throws IOException {
 
-        //        BufferedReader reader = new BufferedReader(new FileReader("./src/main/resources/file.txt"));
-//        boolean[][] grid = parseLines(reader);
-        return read(new File("./src/main/resources/pattern.rle"));
+        //        BufferedReader reader = new BufferedReader(new
+        // FileReader("./src/main/resources/file.txt"));
+        //        boolean[][] grid = parseLines(reader);
+        return read(path);
     }
 
     public static boolean[][] read(File file) {
@@ -45,7 +46,6 @@ public class Biblioteca {
         int n = Integer.parseInt(matcher.group(1));
         int m = Integer.parseInt(matcher.group(2));
         logger.log(Level.INFO, "Tamaño grid RLE: " + "x: " + n + ", y: " + m);
-        @SuppressWarnings("unused") String rule = matcher.group(3);
 
         boolean[][] array = new boolean[m][n];
         int buffer = 0;
@@ -71,7 +71,8 @@ public class Biblioteca {
                 } else if (c == '!') {
                     long endTime = System.nanoTime();
                     long duration = (endTime - startTime);
-                    logger.info("RLE leído con éxito, conversión demoró " + duration / 1000000 + " ms");
+                    logger.info(
+                            "RLE leído con éxito, conversión demoró " + duration / 1000000 + " ms");
                     return array;
                 } else {
                     return null;
@@ -81,5 +82,4 @@ public class Biblioteca {
 
         return null;
     }
-
 }

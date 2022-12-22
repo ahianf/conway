@@ -3,9 +3,11 @@ package cl.ahian.conway;
 
 import java.awt.*;
 import java.awt.image.*;
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 class UserInterface extends JPanel {
     static Logger logger = Logger.getLogger(UserInterface.class.getName());
@@ -28,47 +30,46 @@ class UserInterface extends JPanel {
     }
 
     public UserInterface() {
-        conway = new Conway();
-        GRID_WIDTH = conway.getX();
-        GRID_HEIGHT = conway.getY();
+        File selectedFile = null;
+        JFileChooser chooser = new JFileChooser();
 
-        canvas = new BufferedImage(GRID_WIDTH * SCALING_FACTOR, GRID_HEIGHT * SCALING_FACTOR, BufferedImage.TYPE_INT_RGB);
-        setPreferredSize(new Dimension(canvas.getWidth(), canvas.getHeight()));
-    }
+        int errorCounter = 0;
+        while (errorCounter < 3) {
+            chooser.setFileFilter(new FileNameExtensionFilter("Run Length Encoded file", "rle", "RLE"));
+            chooser.showOpenDialog(null);
+            selectedFile = chooser.getSelectedFile();
 
-    public static int fillCanvas() {
-        int rgb = Color.WHITE.getRGB();
-        for (int x = 0; x < canvas.getWidth(); x++) {
-            for (int y = 0; y < canvas.getHeight(); y++) {
-                fastSetRGB(x, y, rgb);
+            if (selectedFile == null) {
+                JOptionPane.showMessageDialog(
+                        null, "Please select a RLE file", "Error", JOptionPane.ERROR_MESSAGE);
+                errorCounter++;
+            } else {
+                break;
             }
         }
 
-        return 1;
+
+        conway = new Conway(selectedFile);
+        GRID_WIDTH = conway.getX();
+        GRID_HEIGHT = conway.getY();
+        canvas =
+                new BufferedImage(
+                        GRID_WIDTH * SCALING_FACTOR,
+                        GRID_HEIGHT * SCALING_FACTOR,
+                        BufferedImage.TYPE_INT_RGB);
+        setPreferredSize(new Dimension(canvas.getWidth(), canvas.getHeight()));
     }
 
     private void runAnimation() {
-        fillCanvas();
         while (true) {
             long startTime = System.nanoTime();
-            boolean[][] grid = conway.apply();
-            drawArray(grid);
+            drawArray(conway.apply());
             repaint();
 
-            try {
-                Thread.sleep(chrono);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
             long duration = (System.nanoTime() - startTime);
-
             counter++;
-
-            frame.setTitle("JConway " +
-                    "|" +
-//                    "FPS: " + 1000000000 / duration +
-                    " Generation: " + counter);
-
+            frame.setTitle(
+                    "JConway | FPS: %d | Generation: %d".formatted(1000000000 / duration, counter));
         }
     }
 
@@ -80,22 +81,33 @@ class UserInterface extends JPanel {
     }
 
     private static void createAndShowGUI() {
-        UserInterface animationPanel = new UserInterface();
 
-        frame.add(animationPanel);
+        UserInterface ui = new UserInterface();
+
+        frame.add(ui);
         frame.pack();
         frame.setVisible(true);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pixels = ((DataBufferInt) canvas.getRaster().getDataBuffer()).getData();
 
-        logger.log(Level.INFO, "Tamaño de ventana: " + GRID_WIDTH * SCALING_FACTOR + ", " + GRID_HEIGHT * SCALING_FACTOR + ". Scaling: " + SCALING_FACTOR + "x");
+        logger.info(
+                "Tamaño de ventana: "
+                        + GRID_WIDTH * SCALING_FACTOR
+                        + ", "
+                        + GRID_HEIGHT * SCALING_FACTOR
+                        + ". Scaling: "
+                        + SCALING_FACTOR
+                        + "x");
         logger.log(Level.INFO, "Tamaño de grid : " + GRID_WIDTH + ", " + GRID_HEIGHT);
-        animationPanel.runAnimation();
+        ui.runAnimation();
     }
 
     private static int getRefreshRate() {
-        return GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0].getDisplayMode().getRefreshRate();
+        return GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getScreenDevices()[0]
+                .getDisplayMode()
+                .getRefreshRate();
     }
 
     private static void drawArray(boolean[][] grid) {
@@ -105,7 +117,7 @@ class UserInterface extends JPanel {
         for (int row = 0; row < grid.length; row++) {
             for (int col = 0; col < grid[row].length; col++) {
                 if (grid[row][col]) {
-//                    fastSetRGB((row), (col), redRGB);
+                    //                    fastSetRGB((row), (col), redRGB);
 
                     fastSetRGB((row * 2), (col * 2), redRGB);
                     fastSetRGB((row * 2) + 1, (col * 2), redRGB);
@@ -113,7 +125,7 @@ class UserInterface extends JPanel {
                     fastSetRGB((row * 2), (col * 2) + 1, redRGB);
                     fastSetRGB((row * 2) + 1, (col * 2) + 1, redRGB);
                 } else {
-//                    fastSetRGB((row ), (col), whiteRGB);
+                    //                    fastSetRGB((row ), (col), whiteRGB);
 
                     fastSetRGB((row * 2), (col * 2), whiteRGB);
                     fastSetRGB((row * 2) + 1, (col * 2), whiteRGB);
